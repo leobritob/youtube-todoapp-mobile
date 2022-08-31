@@ -1,16 +1,15 @@
-import {
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  SafeAreaView,
-} from 'react-native';
+import { TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Theme } from '../../themes';
 
 const plus = require('../../../assets/plus.png');
 
-export function FabButton() {
+type Props = {
+  onPress: VoidFunction;
+};
+
+export function FabButton({ onPress }: Props) {
   return (
-    <TouchableOpacity style={styles.container}>
+    <TouchableOpacity style={styles.container} onPress={onPress}>
       <Image source={plus} style={styles.image} resizeMode="contain" />
     </TouchableOpacity>
   );

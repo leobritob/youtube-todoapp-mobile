@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Image,
   Modal,
@@ -16,9 +17,17 @@ const closeImage = require('../../../assets/close.png');
 type Props = {
   isVisible: boolean;
   onClose: VoidFunction;
+  onSubmit: (label: string) => void;
 };
 
-export function NewTaskModal({ isVisible, onClose }: Props) {
+export function NewTaskModal({ isVisible, onClose, onSubmit }: Props) {
+  const [text, setText] = useState<string>();
+
+  function handleSubmit() {
+    onSubmit(text);
+    setText(null);
+  }
+
   return (
     <Modal animationType="slide" visible={isVisible} transparent>
       <SafeAreaView style={styles.safeArea}>
@@ -38,11 +47,16 @@ export function NewTaskModal({ isVisible, onClose }: Props) {
           </View>
           <View style={styles.modalContent}>
             <TextInput
+              onChangeText={setText}
               style={styles.textInput}
               placeholder="Enter a task name here..."
               placeholderTextColor="rgba(0,0,0,0.5)"
             />
-            <Button label="CREATE" />
+            <Button
+              label="CREATE"
+              onPress={handleSubmit}
+              disabled={!text || text?.length === 0}
+            />
           </View>
         </View>
       </SafeAreaView>

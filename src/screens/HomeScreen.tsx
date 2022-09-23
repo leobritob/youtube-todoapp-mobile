@@ -30,9 +30,22 @@ export function HomeScreen() {
         ) : (
           <>
             <View style={styles.timerContainer}>
-              <Timer />
+              <Timer
+                enabled={HomeScreenActions.isTimerEnabled(state)}
+                handleStart={() => dispatch(HomeScreenActions.taskStart())}
+                handleCheck={() => dispatch(HomeScreenActions.taskFinished())}
+                handleStop={() => dispatch(HomeScreenActions.taskStop())}
+              />
             </View>
-            <TasksList data={state.tasks} />
+            <TasksList
+              selectedIndex={state.selectedTaskIndex}
+              data={state.tasks}
+              onPress={(selectedTaskIndex: number) =>
+                dispatch(
+                  HomeScreenActions.selectTaskIndex({ selectedTaskIndex })
+                )
+              }
+            />
           </>
         )}
         <FabButton
@@ -46,15 +59,7 @@ export function HomeScreen() {
             dispatch(HomeScreenActions.toggleModal({ isModalVisible: false }))
           }
           onSubmit={(label: string) =>
-            dispatch(
-              HomeScreenActions.createTask({
-                task: {
-                  label,
-                  isSelected: false,
-                  status: 'READY',
-                },
-              })
-            )
+            dispatch(HomeScreenActions.createTask({ task: { label } }))
           }
         />
       </View>

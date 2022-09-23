@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Button } from '../Buttons';
 
@@ -7,35 +8,141 @@ const stopImage = require('../../../assets/stop.png');
 const restartImage = require('../../../assets/restart.png');
 const strongCheckImage = require('../../../assets/strong-check.png');
 
+enum TimerStepsEnum {
+  Stop = 'STOP',
+  InProgress = 'IN_PROGRESS',
+  Finished = 'FINISHED',
+}
+
+const TIMER_SECONDS_DEFAULT = 5;
+
 type Props = {
-  step?: 'START' | 'IN_PROGRESS' | 'FINISHED';
+  enabled?: boolean;
+  handleStart?: VoidFunction;
+  handleCheck?: VoidFunction;
+  handleStop?: VoidFunction;
 };
 
-export function Timer({ step = 'START' }: Props) {
+export function Timer({
+  enabled = false,
+  handleStart,
+  handleCheck,
+  handleStop,
+}: Props) {
+  const [step, setStep] = useState(TimerStepsEnum.Stop);
+  const [isRunning, setIsRunning] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(TIMER_SECONDS_DEFAULT);
+
+  function onStart() {
+    if (handleStart) handleStart();
+    setIsRunning(true);
+    setTimerSeconds(TIMER_SECONDS_DEFAULT);
+    setStep(TimerStepsEnum.InProgress);
+  }
+
+  function onResume() {
+    setIsRunning(true);
+    setStep(TimerStepsEnum.InProgress);
+  }
+
+  function onPause() {
+    setIsRunning(false);
+    setStep(TimerStepsEnum.InProgress);
+  }
+
+  function onStop() {
+    if (handleStop) handleStop();
+    setIsRunning(false);
+    setTimerSeconds(TIMER_SECONDS_DEFAULT);
+    setStep(TimerStepsEnum.Stop);
+  }
+
+  function onRestart() {
+    setIsRunning(true);
+    setTimerSeconds(TIMER_SECONDS_DEFAULT);
+    setStep(TimerStepsEnum.InProgress);
+  }
+
+  function onFinished() {
+    setIsRunning(false);
+    setStep(TimerStepsEnum.Finished);
+    //TODO: OnFinished
+  }
+
+  function onCheck() {
+    if (handleCheck) handleCheck();
+    setIsRunning(false);
+    setTimerSeconds(TIMER_SECONDS_DEFAULT);
+    setStep(TimerStepsEnum.Stop);
+  }
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const timer = setInterval(() => {
+      const seconds = timerSeconds - 1;
+      setTimerSeconds(seconds);
+      if (seconds === 0) {
+        onFinished();
+        clearInterval(timer);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isRunning, timerSeconds]);
+
+  const aux = timerSeconds % 3600;
+  const minutes = String(Math.floor(aux / 60)).padStart(2, '0');
+  const seconds = String(Math.ceil(aux % 60)).padStart(2, '0');
+
+  const timerStatus = useMemo(() => {
+    if (step === TimerStepsEnum.Stop) {
+      return 'Ready';
+    }
+    if (step === TimerStepsEnum.InProgress) {
+      if (!isRunning && timerSeconds > 0) {
+        return 'Pause';
+      }
+      return 'In Progress';
+    }
+    if (step === TimerStepsEnum.Finished) {
+      return 'Finished!';
+    }
+  }, [step, isRunning, timerSeconds]);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.statusText}>Ready</Text>
-      <Text style={styles.timerText}>24:59</Text>
+      <Text style={styles.statusText}>{timerStatus}</Text>
+      <Text style={styles.timerText}>
+        {minutes}:{seconds}
+      </Text>
       <View style={styles.controls}>
-        {step === 'START' && (
+        {step === TimerStepsEnum.Stop && (
           <View style={{ width: '65%' }}>
-            <Button variant="light" label="START" />
+            <Button
+              disabled={!enabled}
+              variant="light"
+              label="START"
+              onPress={onStart}
+            />
           </View>
         )}
-        {step === 'IN_PROGRESS' && (
+        {step === TimerStepsEnum.InProgress && (
           <>
-            <Button variant="light" icon={playImage} />
+            <Button variant="light" icon={playImage} onPress={onResume} />
             <View style={{ paddingHorizontal: 10 }}>
-              <Button variant="light" icon={pauseImage} />
+              <Button variant="light" icon={pauseImage} onPress={onPause} />
             </View>
-            <Button variant="light" icon={stopImage} />
+            <Button variant="light" icon={stopImage} onPress={onStop} />
           </>
         )}
-        {step === 'FINISHED' && (
+        {step === TimerStepsEnum.Finished && (
           <>
-            <Button variant="light" icon={restartImage} />
+            <Button variant="light" icon={restartImage} onPress={onRestart} />
             <View style={{ paddingLeft: 5 }}>
-              <Button variant="light" icon={strongCheckImage} />
+              <Button
+                variant="light"
+                icon={strongCheckImage}
+                onPress={onCheck}
+              />
             </View>
           </>
         )}

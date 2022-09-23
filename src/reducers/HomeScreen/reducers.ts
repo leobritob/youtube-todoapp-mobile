@@ -19,12 +19,27 @@ export function homeScreenReducer(
         tasks: [...state.tasks, action.payload.task],
       };
 
+    case HomeScreenActionsEnum.SelectTaskIndex:
+      return {
+        ...state,
+        selectedTaskIndex: action.payload.selectedTaskIndex,
+      };
+
+    case HomeScreenActionsEnum.SetTaskStatus:
+      const tasks = [...state.tasks];
+      tasks[state.selectedTaskIndex].status = action.payload.taskStatus;
+      return {
+        ...state,
+        tasks,
+      };
+
     default:
       return { ...state };
   }
 }
 
-export const homeScreenInitialState = {
+export const homeScreenInitialState: IHomeScreen = {
   tasks: [],
   isModalVisible: false,
+  selectedTaskIndex: undefined,
 };
